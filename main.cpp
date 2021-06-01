@@ -1,6 +1,6 @@
 /*  This file is part of the KDE project
     Copyright (C) 2009 Jaroslav Reznik <jreznik@redhat.com>
-
+    Copyright (C) 2021 Bob <pengbo.wu@jingos.com>
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public
     License as published by the Free Software Foundation; either
@@ -25,6 +25,8 @@
 #include <KLocalizedString>
 #include <KCrash>
 #include <KDBusService>
+#include <KConfig>
+#include <KLocalizedContext>
 // PolkitQt1
 #include <PolkitQt1/Subject>
 // Qt
@@ -53,12 +55,13 @@ int main(int argc, char *argv[])
 #endif
 
     QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps, true);
-
+    
     KCrash::setFlags(KCrash::AutoRestart);
 
     QApplication app(argc, argv);
-    app.setQuitOnLastWindowClosed(false);
 
+    app.setQuitOnLastWindowClosed(false);
+    
     KLocalizedString::setApplicationDomain("polkit-kde-authentication-agent-1");
 
     KAboutData aboutData("polkit-kde-authentication-agent-1", i18n("PolicyKit1 KDE Agent"), POLKIT_KDE_1_VERSION);
@@ -88,12 +91,10 @@ int main(int argc, char *argv[])
 
     const bool result = listener->registerListener(session, "/org/kde/PolicyKit1/AuthenticationAgent");
 
-    qDebug() << "Authentication agent result:" << result;
-
     if (!result) {
-        qWarning() << "Couldn't register listener!";
         exit(1);
     }
 
     app.exec();
 }
+

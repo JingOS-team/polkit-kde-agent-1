@@ -18,15 +18,15 @@
     along with this library; see the file COPYING.LIB.  If not, write to
     the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
     Boston, MA 02110-1301, USA.
-
 */
 
 #include <QPointer>
 #include <QHash>
-
+#include <QQuickView>
+#include <QStringList>
+#include <QObject>
 #include <PolkitQt1/Agent/Listener>
-
-class AuthDialog;
+#include <QString>
 
 using namespace PolkitQt1::Agent;
 
@@ -34,9 +34,32 @@ class PolicyKitListener : public Listener
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.kde.Polkit1AuthAgent")
+
 public:
     explicit PolicyKitListener(QObject *parent = nullptr);
     ~PolicyKitListener() override;
+
+    Q_INVOKABLE void dialogAccepted( const QString &passwd );
+
+    Q_INVOKABLE QStringList getIdentities() const;
+    //add by huanlele
+    Q_INVOKABLE void invokeSendCancelSig();
+    Q_INVOKABLE void invokeSendConfirmSig();
+    Q_INVOKABLE void invokeSendErrorSig(int errorCode);
+
+    Q_INVOKABLE QString getMessage();
+
+    QString  errorMessage();
+
+    Q_INVOKABLE void dialogCanceled();
+
+signals:
+    void sigCancel();
+    void sigConfirm();
+    void sigError(int errorCode);
+    //end by huanlele
+    void errorMessageChanged(QString errorStr);
+
 
 public slots:
     void initiateAuthentication(const QString &actionId,
@@ -48,18 +71,13 @@ public slots:
                                 PolkitQt1::Agent::AsyncResult* result) override;
     bool initiateAuthenticationFinish() override;
     void cancelAuthentication() override;
-
     void tryAgain();
     void finishObtainPrivilege();
-
-    void request(const QString &request, bool echo);
     void completed(bool gainedAuthorization);
-    void showError(const QString &text);
-
     void setWIdForAction(const QString &action, qulonglong wID);
 
 private:
-    QPointer<AuthDialog> m_dialog;
+    QPointer<QQuickView> m_view;
     QPointer<Session> m_session;
     bool m_inProgress;
     bool m_gainedAuthorization;
@@ -70,11 +88,14 @@ private:
     QString m_cookie;
     PolkitQt1::Identity m_selectedUser;
     QHash< QString, qulonglong > m_actionsToWID;
+    QString m_error;
+    QString m_message;
+
+    void setErrorMessage(const QString &errorMessage);
 
 private slots:
-    void dialogAccepted();
-    void dialogCanceled();
     void userSelected(const PolkitQt1::Identity &identity);
+
 };
 
 #endif

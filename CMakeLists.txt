@@ -15,9 +15,18 @@ include(KDECMakeSettings)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(KDEClangFormat)
 include(FeatureSummary)
+include(ECMConfiguredInstall)
 
 find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED Core DBus Widgets)
 
+find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED Core Qml Quick)
+
+find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
+    I18n
+    KIO
+    Plasma
+    PlasmaQuick
+)
 # Load the frameworks we need
 find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
   I18n
@@ -28,7 +37,7 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
   Crash
   IconThemes
 )
-
+ki18n_install(po)
 include(CheckIncludeFile)
 include(CheckSymbolExists)
 check_include_file("sys/prctl.h" HAVE_SYS_PRCTL_H)
@@ -61,13 +70,11 @@ include_directories(
 
 qt5_add_dbus_adaptor(policykit_SRCS org.kde.Polkit1AuthAgent.xml policykitlistener.h PolicyKitListener)
 
-ki18n_wrap_ui(policykit_SRCS AuthDialog.ui authdetails.ui)
 
 set(policykit_SRCS
     ${policykit_SRCS}
     policykitlistener.cpp
     main.cpp
-    AuthDialog.cpp
 )
 
 add_executable(polkit-kde-authentication-agent-1 ${policykit_SRCS})
@@ -80,6 +87,14 @@ target_link_libraries(polkit-kde-authentication-agent-1
     KF5::I18n
     KF5::Crash
     KF5::IconThemes
+    Qt5::Gui
+    KF5::Plasma
+    Qt5::Qml
+    Qt5::Quick
+    KF5::Service
+    KF5::KIOGui
+    KF5::Solid
+    crypt
     ${POLKITQT-1_LIBRARIES}
 )
 
@@ -87,8 +102,13 @@ configure_file(polkit-kde-authentication-agent-1.desktop.cmake ${CMAKE_BINARY_DI
 
 install(TARGETS polkit-kde-authentication-agent-1 DESTINATION ${KDE_INSTALL_LIBEXECDIR})
 
+install(DIRECTORY DESTINATION /usr/share/jingostest/systemui/org.jingtest.polkit-kde-authentication-agent-1)
+install(FILES ./authdialog.qml DESTINATION  /usr/share/jingostest/systemui/org.jingtest.polkit-kde-authentication-agent-1/ )
+
 install(FILES ${CMAKE_BINARY_DIR}/polkit-kde-authentication-agent-1.desktop DESTINATION ${KDE_INSTALL_AUTOSTARTDIR})
 install(FILES ${CMAKE_BINARY_DIR}/polkit-kde-authentication-agent-1.desktop DESTINATION ${XDG_APPS_INSTALL_DIR} RENAME org.kde.polkit-kde-authentication-agent-1.desktop)
+
+ecm_install_configured_files(INPUT plasma-polkit-agent.service.in DESTINATION ${KDE_INSTALL_SYSTEMDUSERUNITDIR})
 
 install(FILES policykit1-kde.notifyrc DESTINATION ${KDE_INSTALL_KNOTIFY5RCDIR})
 
