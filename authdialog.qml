@@ -29,70 +29,71 @@ import QtQuick.Window 2.14
 import org.kde.kcm 1.2
 
 import org.kde.plasma.components 2.0 as PlasmaComponents
+import jingos.display 1.0
 
 Item {
     id: root
-
     anchors.fill: parent
 
     Rectangle {
         id: authenticationrect
 
-        width: root.width*0.3
-        height: root.height*0.321
         anchors.horizontalCenter: root.horizontalCenter
         anchors.top: root.top
-        anchors.topMargin: root.height*0.102
-        
-        radius: 12
-        color: Qt.rgba(1,1,1,1)
+        anchors.topMargin: JDisplay.dp(66)
+        width: JDisplay.dp(264)
+        height: errortTip.text === "" ? (JDisplay.dp(15) * 2 + authenticationtitle.height + authenticationtip.height + authenticationtip.anchors.topMargin + keyLineEdit.height + keyLineEdit.anchors.topMargin + name.height + name.anchors.topMargin )
+        : (JDisplay.dp(15) * 2 + authenticationtitle.height + authenticationtip.height + authenticationtip.anchors.topMargin + keyLineEdit.height + keyLineEdit.anchors.topMargin + name.height + name.anchors.topMargin + errortTip.height + errortTip.anchors.topMargin)
+        radius: JDisplay.dp(12)
+
+        color: JTheme.colorScheme === "jingosLight" ? Qt.rgba(1,1,1,1) : Qt.rgba(38 / 255, 38 / 255, 42 / 255, 0.9)
 
         PlasmaComponents.Label {
-            id:authenticationtitle
+            id: authenticationtitle
 
             anchors.top: authenticationrect.top
-            anchors.topMargin: root.height*0.0247
+            anchors.topMargin: JDisplay.dp(15)
             anchors.horizontalCenter: parent.horizontalCenter
-            font.pixelSize: Math.ceil(root.height*0.02)
+            height: contentHeight
 
-            color: "black"
-            font.weight : Font.Medium
+            font.pixelSize: JDisplay.sp(12)
+            color: JTheme.majorForeground
+            font.weight :Font.Medium
             text: i18n("Certification required")
         }
 
         Text {
             id: authenticationtip
 
-            width: root.width * 0.262
-            height: authenticationtip.contentHeight
             anchors.top: authenticationtitle.bottom
-            anchors.topMargin: root.height*0.0124
+            anchors.topMargin: JDisplay.dp(5)
             anchors.horizontalCenter: parent.horizontalCenter
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.verticalCenter
 
-            font.pixelSize: Math.ceil(root.height*0.015)
-            color: "black"
+            font.pixelSize: JDisplay.sp(10)
+            color: JTheme.majorForeground
             wrapMode: Text.Wrap
+            width: JDisplay.dp(234)
+            height: contentHeight
             textFormat: Text.RichText
             text: policyKitListener.getMessage()
         }
 
         JKeyBdLineEdit {
-            id:keyLineEdit
+            id: keyLineEdit
 
-            width: root.width * 0.2639
-            height: root.height * 0.0463
+            width: JDisplay.dp(234)
+            height: JDisplay.dp(30)
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: authenticationtip.bottom
-            anchors.topMargin:  root.height * 0.024
-
-            courseColor: "#FF3C4BE8"
-            textColor: "black"
-            cleanIconBackgroundColor: "#FFAEAEAE"
-            cleanIconColor: "#FFFFFF"
-
-            onMousePress: {
+            anchors.topMargin: JDisplay.dp(8)
+            courseColor:"#FF3C4BE8"
+            textColor:JTheme.majorForeground
+            cleanIconBackgroundColor:"#FFAEAEAE"
+            cleanIconColor:"#FFFFFF"
+            color: JTheme.textFieldBackground
+            onMousePress:{
                 virtuaKey.open()
             }
         }
@@ -100,22 +101,22 @@ Item {
         PlasmaComponents.Label {
             id: errortTip
 
-            anchors.top: keyLineEdit.bottom//authenticationinput.bottom
-            anchors.topMargin: root.height * 0.0124
+            anchors.top: keyLineEdit.bottom
+            anchors.topMargin: JDisplay.dp(8)
             anchors.horizontalCenter: parent.horizontalCenter
-
-            font.pixelSize: Math.ceil(root.height * 0.015)
-            height: root.height * 0.0216
-            color: "#E95B4E"
+            font.pixelSize: JDisplay.sp(648 * 0.015)
+            height: JDisplay.dp(14)
             horizontalAlignment: Text.AlignHCenter
+            color: "#E95B4E"
             text: ""
-
+            visible: text !== ""
             Connections {
                 target: policyKitListener
                 onErrorMessageChanged: {
                     errortTip.text = errorStr
                     errortTip.color = "#E95B4E"
-                    errortTip.horizontalAlignment = Text.AlignHCenter
+                    errortTip.horizontalAlignment=Text.AlignHCenter
+                    keyLineEdit.clearData()
                 }
             }
         }
@@ -123,106 +124,84 @@ Item {
         Item {
             id: name
 
-            anchors.top: errortTip.bottom//authenticationinput.bottom
-            anchors.topMargin: root.height * 0.02
+            anchors.top: errortTip.visible ?  errortTip.bottom : keyLineEdit.bottom
+            anchors.topMargin:  errortTip.visible ? JDisplay.dp(8) : JDisplay.dp(15)
             anchors.horizontalCenter: parent.horizontalCenter
-            height: root.height * 0.0509
-            width: root.width * 0.2635
+            height: JDisplay.dp(648 * 0.0509)
+            width: JDisplay.dp(888 * 0.2635)
 
             Row {
                 id: btnLay
+
                 anchors.fill: parent
-                spacing: root.width * 0.0112
+                spacing: JDisplay.dp(888 * 0.0112)
                 Rectangle {
                     id: closeButton
 
-                    height: parent.height//appHeightResolution * 66
-                    width:  root.width * 0.126
+                    height: parent.height
+                    width: JDisplay.dp(888 * 0.126)
+
                     visible: true
                     radius: closeButton.height * 0.21
-                    color: Qt.rgba(239/255,239/255,239/255,0.70)
-
+                    color: JTheme.colorScheme==="jingosLight" ? mouseClose.containsMouse ?( mouseClose.pressed ? "#28787878" : "#1E767676") : "#B2EFEFEF"
+                                                              : mouseClose.containsMouse ?( mouseClose.pressed ? JTheme.pressBackground : JTheme.hoverBackground) : JTheme.buttonBackground
                     Text {
                         anchors.fill: parent
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        color: "#000000"
-                        font.pixelSize: 11
+
+                        color: JTheme.majorForeground//"#000000"
+                        font.pixelSize: JDisplay.sp(648 * 0.017)//11
                         text: i18n("Cancel")
                     }
 
                     MouseArea {
+                        id: mouseClose
+
                         anchors.fill: parent
                         hoverEnabled: true
 
                         onClicked: {
-                            policyKitListener.invokeSendCancelSig()
-                            policyKitListener.dialogCanceled()
+                            policyKitListener.invokeSendCancelSig();
+                            policyKitListener.dialogCanceled();
                             var list = policyKitListener.getIdentities()
-                        }
-
-                        onEntered: {
-                            closeButton.color = Qt.rgba(118/255,118/255,128/255,0.12)
-                        }
-
-                        onExited: {
-                            closeButton.color = Qt.rgba(239/255,239/255,239/255,0.70)
-                        }
-
-                        onPressed: {
-                            closeButton.color = Qt.rgba(120/255,120/255,120/255,0.16)
-                        }
-
-                        onReleased: {
-                            closeButton.color = Qt.rgba(239/255,239/255,239/255,0.70)
+                            for (var i =0; i < list.length; i++) {
+                                console.log(list[i])
+                            }
                         }
                     }
                 }
 
                 Rectangle {
                     id: enterButton
-                    
-                    visible: true
-                    height: parent.height//appHeightResolution * 66
-                    width:  root.width*0.126
-                    radius: enterButton.height*0.21
-                    color: Qt.rgba(239/255,239/255,239/255,0.70)
 
+                    visible: true
+                    height: parent.height
+                    width:  JDisplay.dp(888 * 0.126)
+                    radius: enterButton.height * 0.21
+                    color: JTheme.colorScheme==="jingosLight" ? mouseEnter.containsMouse ?(mouseEnter.pressed ? "#28787878" : "#1E767676") : "#B2EFEFEF"
+                                                              : mouseEnter.containsMouse ?( mouseEnter.pressed ? JTheme.pressBackground : JTheme.hoverBackground) : JTheme.buttonBackground
                     Text {
                         anchors.fill: parent
-
-                        color: keyLineEdit.labelData ? "#3C4BE8" : "#000000"
-                        font.pixelSize: 11
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        text: i18n("Certify")
-                    }
 
+                        color: keyLineEdit.labelData.length >= 4 ? Qt.rgba(69 /255, 107 / 255, 255 / 255,1) : JTheme.colorScheme==="jingosLight" ? Qt.rgba(0,0,0,0.3) : Qt.rgba(247 / 255, 247 / 255, 247 / 255,0.3)
+
+                        font.pixelSize: JDisplay.sp(648 * 0.017)//11
+                        text: i18n("OK")
+                    }
+                    enabled: keyLineEdit.labelData.length >= 4 ? true : false
                     MouseArea {
+                        id: mouseEnter
+
                         anchors.fill: parent
                         hoverEnabled: true
-
                         onClicked: {
                             policyKitListener.dialogAccepted(keyLineEdit.labelData)
                             errortTip.text = i18n("In the validation")
-                            errortTip.color="#000000"
+                            errortTip.color=JTheme.majorForeground
                             errortTip.horizontalAlignment=Text.AlignLeft
-                        }
-
-                        onEntered: {
-                            enterButton.color = Qt.rgba(118/255,118/255,128/255,0.12)
-                        }
-
-                        onExited: {
-                            enterButton.color = Qt.rgba(239/255,239/255,239/255,0.70)
-                        }
-
-                        onPressed: {
-                            enterButton.color = Qt.rgba(120/255,120/255,120/255,0.16)
-                        }
-
-                        onReleased: {
-                            enterButton.color = Qt.rgba(239/255,239/255,239/255,0.70)
                         }
                     }
                 }
@@ -241,37 +220,34 @@ Item {
         visible: true
     }
 
-    JPasswdKeyBd {
+    JPasswdKeyBd{
         id: virtuaKey
 
-        boardWidth: root.width
-        boardHeight: root.height*0.5069
-        y: root.height-boardHeight
-        closePolicy: Popup.NoAutoClose
-
-        onKeyBtnClick: {
+        boardWidth:root.width
+        boardHeight:JDisplay.sp(648 * 0.5069)
+        y:root.height-boardHeight
+        closePolicy:Popup.NoAutoClose
+        onKeyBtnClick:{
             keyLineEdit.opAddStr(str)
         }
-
-        onKeyBtnEnter: {
+        onKeyBtnEnter:{
             policyKitListener.dialogAccepted(keyLineEdit.labelData)
             errortTip.text = i18n("In the validation")
-            errortTip.color = "#000000"
+            errortTip.color=JTheme.majorForeground
             event.accepted = true
         }
-
-        onKeyBtnDel: {
+        onKeyBtnDel:{
             keyLineEdit.opSubStr()
         }
     }
 
     Component.onCompleted: {
-        timer.running = true
+        timer.running=true
     }
 
     Timer {
-        id: timer
-        
+        id:timer
+
         interval: 500
         onTriggered: {
             keyLineEdit.lableId.forceActiveFocus()
@@ -280,10 +256,10 @@ Item {
     }
 
     Keys.onPressed: {
-        if(event.key === Qt.Key_Return) {
+        if(event.key === Qt.Key_Return){
             policyKitListener.dialogAccepted(keyLineEdit.labelData)
             errortTip.text = i18n("In the validation")
-            errortTip.color = "#000000"
+            errortTip.color=JTheme.majorForeground
             event.accepted = true
         }
     }

@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(polkit-kde-agent-1)
-set(PROJECT_VERSION "5.20.80")
+set(PROJECT_VERSION "5.21.80")
 
 set(QT_MIN_VERSION "5.15.0")
-set(KF5_MIN_VERSION "5.74")
+set(KF5_MIN_VERSION "5.78")
 
 # we need some parts of the ECM CMake helpers
 find_package(ECM ${KF5_MIN_VERSION} REQUIRED NO_MODULE)
@@ -16,6 +16,10 @@ include(KDECompilerSettings NO_POLICY_SCOPE)
 include(KDEClangFormat)
 include(FeatureSummary)
 include(ECMConfiguredInstall)
+
+if(ECM_VERSION VERSION_GREATER_EQUAL 5.79)
+    include(KDEGitCommitHooks)
+endif()
 
 find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED Core DBus Widgets)
 
@@ -37,7 +41,6 @@ find_package(KF5 ${KF5_MIN_VERSION} REQUIRED COMPONENTS
   Crash
   IconThemes
 )
-ki18n_install(po)
 include(CheckIncludeFile)
 include(CheckSymbolExists)
 check_include_file("sys/prctl.h" HAVE_SYS_PRCTL_H)
@@ -116,4 +119,10 @@ install(FILES policykit1-kde.notifyrc DESTINATION ${KDE_INSTALL_KNOTIFY5RCDIR})
 file(GLOB_RECURSE ALL_CLANG_FORMAT_SOURCE_FILES *.cpp *.h)
 kde_clang_format(${ALL_CLANG_FORMAT_SOURCE_FILES})
 
+if(ECM_VERSION VERSION_GREATER_EQUAL 5.79)
+    kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
+endif()
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
+
+find_package(KF5I18n CONFIG REQUIRED)
+ki18n_install(po)

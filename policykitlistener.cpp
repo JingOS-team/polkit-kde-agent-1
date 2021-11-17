@@ -1,6 +1,5 @@
 /*  This file is part of the KDE project
     Copyright (C) 2009 Jaroslav Reznik <jreznik@redhat.com>
-    Copyright (C) 2021 Bob <pengbo.wu@jingos.com>
 
     This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU General Public
@@ -55,11 +54,15 @@ PolicyKitListener::PolicyKitListener(QObject *parent)
                                                      QDBusConnection::ExportScriptableSlots |
                                                      QDBusConnection::ExportAllSignals |      //add by huanlele
                                                      QDBusConnection::ExportScriptableProperties |
-                                                     QDBusConnection::ExportAdaptors)) {
+                                                     QDBusConnection::ExportAdaptors))
+    {
+        qWarning() << "Could not initiate DBus helper!";
     }
+
+    qDebug() << "Listener online";
 }
 
-PolicyKitListener::~PolicyKitListener() 
+PolicyKitListener::~PolicyKitListener()
 {
 
 }
@@ -79,7 +82,7 @@ void PolicyKitListener::invokeSendConfirmSig()
 {
     QDBusMessage message =QDBusMessage::createSignal("/org/kde/Polkit1AuthAgent", "org.kde.Polkit1AuthAgent", "sigConfirm");
     bool rv = QDBusConnection::sessionBus().send(message);
-    if (rv == false) {
+    if(rv == false) {
         qWarning() << Q_FUNC_INFO << " send dbus signal fail  path is /org/kde/Polkit1AuthAgent "
             << " interface is org.kde.Polkit1AuthAgent  signal is sigConfirm";
     }
@@ -90,12 +93,15 @@ void PolicyKitListener::invokeSendErrorSig(int errorCode)
     QDBusMessage message =QDBusMessage::createSignal("/org/kde/Polkit1AuthAgent", "org.kde.Polkit1AuthAgent", "sigError");
     message << errorCode;
     bool rv = QDBusConnection::sessionBus().send(message);
-    if (rv == false) {
-        qWarning() << Q_FUNC_INFO << " send dbus signal fail  path is /org/kde/Polkit1AuthAgent " << " interface is org.kde.Polkit1AuthAgent  signal is sigError";
+    if(rv == false) {
+        qWarning() << Q_FUNC_INFO << " send dbus signal fail  path is /org/kde/Polkit1AuthAgent "
+            << " interface is org.kde.Polkit1AuthAgent  signal is sigError";
     }
 }
+// end by huanlele
 void PolicyKitListener::setWIdForAction(const QString& action, qulonglong wID)
 {
+    qDebug() << "On to the handshake";
     m_actionsToWID[action] = wID;
 }
 
@@ -107,10 +113,12 @@ void PolicyKitListener::initiateAuthentication(const QString &actionId,
         const PolkitQt1::Identity::List &identities,
         PolkitQt1::Agent::AsyncResult* result)
 {
+    qDebug() << "Initiating authentication";
 
     if (m_inProgress) {
         result->setError(i18n("Another client is already authenticating, please try again later."));
         result->setCompleted();
+        qDebug() << "Another client is already authenticating, please try again later.";
         return;
     }
 
@@ -119,11 +127,12 @@ void PolicyKitListener::initiateAuthentication(const QString &actionId,
     m_cookie = cookie;
     m_result = result;
     m_session.clear();
+
     m_inProgress = true;
 
     const WId parentId = m_actionsToWID.value(actionId, 0);
 
-    if (!m_view) {
+    if(!m_view) {
         m_view = new QQuickView;
         m_view->setFlags(Qt::FramelessWindowHint);
         m_view->setWindowState(Qt::WindowFullScreen);
@@ -133,11 +142,18 @@ void PolicyKitListener::initiateAuthentication(const QString &actionId,
 
         KLocalizedString::setApplicationDomain("polkit-kde-agent-1");
         m_view->rootContext()->setContextObject(new KLocalizedContext(m_view));
+
         m_view->setSource(QUrl::fromLocalFile("/usr/share/jingostest/systemui/org.jingtest.polkit-kde-authentication-agent-1/authdialog.qml"));
         m_view->showFullScreen();
+
+        connect(m_view, &QQuickView::activeChanged, this, &PolicyKitListener::userCancel);
     }
 
+    qDebug() << "WinId of the dialog is " << m_view->winId();
     KWindowSystem::forceActiveWindow(m_view->winId());
+
+    qDebug() << "WinId of the shown dialog is " << m_view->winId();
+
     m_selectedUser = identities[0];
     m_numTries = 0;
     tryAgain();
@@ -145,6 +161,7 @@ void PolicyKitListener::initiateAuthentication(const QString &actionId,
 
 void PolicyKitListener::tryAgain()
 {
+    qDebug() << "Trying again";
     m_wasCancelled = false;
     if (m_selectedUser.isValid()) {
         m_session = new Session(m_selectedUser, m_cookie, m_result);
@@ -155,6 +172,8 @@ void PolicyKitListener::tryAgain()
 
 void PolicyKitListener::finishObtainPrivilege()
 {
+    qDebug() << "Finishing obtaining privileges";
+
     if (m_selectedUser.isValid()) {
         m_numTries ++;
     }
@@ -162,9 +181,11 @@ void PolicyKitListener::finishObtainPrivilege()
     if (!m_gainedAuthorization && !m_wasCancelled && !m_view.isNull()) {
         m_error = i18n("Password input error, please try again");
         setErrorMessage(m_error);
+        // if (m_numTries < 3) { //暂时不考虑调用次数的问题
         m_session.data()->deleteLater();
         tryAgain();
         return;
+        // }
     }
 
     if (!m_session.isNull()) {
@@ -180,21 +201,27 @@ void PolicyKitListener::finishObtainPrivilege()
         m_view = nullptr;
     }
     m_inProgress = false;
+    qDebug() << "Finish obtain authorization:" << m_gainedAuthorization;
 }
 
 bool PolicyKitListener::initiateAuthenticationFinish()
 {
+    qDebug() << "Finishing authentication";
     return true;
 }
 
 void PolicyKitListener::cancelAuthentication()
 {
+    qDebug() << "Cancelling authentication, please try again";
+
     m_wasCancelled = true;
     finishObtainPrivilege();
 }
 
 void PolicyKitListener::completed(bool gainedAuthorization)
 {
+    qDebug() << "Completed: " << gainedAuthorization;
+
     m_gainedAuthorization = gainedAuthorization;
 
     if(m_gainedAuthorization) {
@@ -202,9 +229,10 @@ void PolicyKitListener::completed(bool gainedAuthorization)
     }
     finishObtainPrivilege();
 }
-
+//request
 void PolicyKitListener::dialogAccepted(const QString &passwd)
 {
+    qDebug() << "Dialog accepted";
     if (!m_view.isNull()) {
         m_session.data()->setResponse(passwd);
     }
@@ -212,6 +240,8 @@ void PolicyKitListener::dialogAccepted(const QString &passwd)
 
 void PolicyKitListener::dialogCanceled()
 {
+    qDebug() << "Dialog cancelled";
+
     m_wasCancelled = true;
     if (!m_session.isNull()) {
         m_session.data()->cancel();
@@ -232,10 +262,10 @@ void PolicyKitListener::userSelected(const PolkitQt1::Identity &identity)
 QStringList  PolicyKitListener::getIdentities() const
 {
     QStringList  dentitylist;
-    for (int i = 0; i < m_identities.size(); i++) {
+    for(int i = 0; i < m_identities.size(); i++) {
         dentitylist << m_identities[i].toString();
     }
-    return dentitylist;
+     return dentitylist;
 }
 
 void PolicyKitListener::setErrorMessage(const QString &errorMessage)
@@ -252,4 +282,15 @@ QString PolicyKitListener::errorMessage()
 QString PolicyKitListener::getMessage()
 {
     return m_message;
+}
+
+void PolicyKitListener::userCancel()
+{
+    qDebug() << "m_view->isActive()" << m_view->isActive();
+    if (m_view == NULL) {
+        return;
+    }
+    if (!m_view->isActive()) {
+        dialogCanceled();
+    }
 }

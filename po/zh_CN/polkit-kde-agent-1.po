@@ -29,7 +29,7 @@ msgstr "取消"
 
 #: authdialog.qml:291
 #, kde-format
-msgid "Certify"
+msgid "OK"
 msgstr "验证"
 
 #: authdialog.qml:300 authdialog.qml:327

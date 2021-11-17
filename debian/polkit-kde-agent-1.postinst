@@ -1,0 +1,13 @@
+#!/bin/sh -e
+
+UID=1000
+
+if id "$UID" > /dev/null 2>&1; then
+    USER="$(id "$UID" -u -n)"
+    
+    if [ -e /home/$USER/.cache/polkit-kde-authentication-agent-1 ]; then
+        rm -rf /home/$USER/.cache/polkit-authentication-agent-1
+    fi
+fi
+
+exit 0

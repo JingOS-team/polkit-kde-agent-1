@@ -1,0 +1,54 @@
+Source: polkit-kde-agent-1
+Section: kde
+Priority: optional
+Maintainer: Debian/Kubuntu Qt/KDE Maintainers <debian-qt-kde@lists.debian.org>
+Uploaders: Maximiliano Curia <maxy@debian.org>
+Build-Depends: cmake (>= 3.0~),
+               debhelper (>= 11~),
+               extra-cmake-modules (>= 5.50.0~),
+               libkf5config-dev,
+               libkf5coreaddons-dev (>= 5.50.0~),
+               libkf5crash-dev (>= 5.50.0~),
+               libkf5dbusaddons-dev (>= 5.50.0~),
+               libkf5i18n-dev (>= 5.50.0~),
+               libkf5kio-dev,
+               libkf5iconthemes-dev (>= 5.50.0~),
+               libkf5notifications-dev,
+               libkf5widgetsaddons-dev (>= 5.50.0~),
+               libkf5windowsystem-dev (>= 5.50.0~),
+               libpolkit-qt5-1-dev (>= 0.112.0),
+               pkg-kde-tools (>= 0.15.16),
+               qtdeclarative5-dev,
+               qtquickcontrols2-5-dev,
+               libkf5declarative-dev,
+               libkf5plasma-dev,
+               plasma-phone-components,
+               qtbase5-dev (>= 5.11.0~)
+Standards-Version: 4.1.4
+Homepage: https://projects.kde.org/projects/kde/workspace/polkit-kde-agent-1
+Vcs-Browser: https://salsa.debian.org/qt-kde-team/kde/polkit-kde-agent-1
+Vcs-Git: https://salsa.debian.org/qt-kde-team/kde/polkit-kde-agent-1.git
+
+Package: polkit-kde-1
+Section: oldlibs
+Architecture: all
+Depends: polkit-kde-agent-1, ${misc:Depends}
+Description: transitional dummy package
+ This is a transitional dummy package. It can safely be removed.
+
+Package: polkit-kde-agent-1
+Architecture: any
+Depends: policykit-1, ${misc:Depends}, ${shlibs:Depends}
+Breaks: plasma-desktop (<< 4:5.14), polkit-kde-1 (<< 5.1.95~)
+Replaces: polkit-kde-1 (<< 5.1.95~)
+Provides: polkit-1-auth-agent
+Description: KDE dialogs for PolicyKit
+ PolicyKit is an application-level toolkit for defining and handling the policy
+ that allows unprivileged processes to speak to privileged processes.
+ .
+ It is a framework for centralizing the decision making process with respect to
+ granting access to privileged operations (like calling the HAL Mount() method)
+ for unprivileged (desktop) applications.
+ .
+ PolicyKit-Kde provides a D-Bus session bus service that is used to
+ bring up authentication dialogs used for obtaining privileges.

@@ -95,6 +95,7 @@ private:
 
 private slots:
     void userSelected(const PolkitQt1::Identity &identity);
+    void userCancel();
 
 };
 

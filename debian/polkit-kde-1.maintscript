@@ -1,0 +1,1 @@
+rm_conffile /etc/xdg/autostart/polkit-kde-authentication-agent-1.desktop 0.99.0-4~
